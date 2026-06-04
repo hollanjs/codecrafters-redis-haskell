@@ -4,8 +4,17 @@
 
 module Main (main) where
 
-import Network.Simple.TCP (serve, HostPreference(HostAny), closeSock, send)
+import Network.Simple.TCP (serve, HostPreference(HostAny), closeSock, send, recv, Socket)
 import System.IO (hPutStrLn, hSetBuffering, stdout, stderr, BufferMode(NoBuffering))
+
+handleClient :: Socket -> IO ()
+handleClient socket = do
+    msg <- recv socket 1024
+    case msg of
+        Just _ -> do
+            send socket "+PONG\r\n"
+            handleClient socket
+        Nothing -> return ()
 
 main :: IO ()
 main = do
@@ -21,5 +30,5 @@ main = do
     putStrLn $ "Redis server listening on port " ++ port
     serve HostAny port $ \(socket, address) -> do
         putStrLn $ "successfully connected client: " ++ show address
-        send socket "+PONG\r\n"
+        handleClient socket
         closeSock socket
