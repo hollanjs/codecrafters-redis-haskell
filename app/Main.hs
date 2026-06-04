@@ -6,6 +6,82 @@ module Main (main) where
 
 import Network.Simple.TCP (serve, HostPreference(HostAny), closeSock, send, recv, Socket)
 import System.IO (hPutStrLn, hSetBuffering, stdout, stderr, BufferMode(NoBuffering))
+import Data.ByteString.Char8 (split, ByteString)
+
+
+-- RESPsimplestrings		Simple	    +
+-- RESPsimpleerrors		    Simple	    -
+-- RESPintegers		        Simple	    :
+-- RESPbulkstrings		    Aggregate	$
+-- RESPnullbulkstrings		Aggregate	$-1\r\n
+-- RESParrays		        Aggregate	*
+-- RESPnulls		        Simple	    _
+-- RESPbooleans		        Simple	    #
+-- RESPdoubles		        Simple	    ,
+-- RESPbignumbers		    Simple	    (
+-- RESPbulkerrors		    Aggregate	!
+-- RESPverbatimstrings		Aggregate	=
+-- RESPmaps		            Aggregate	%
+-- RESPattributes		    Aggregate	|
+-- RESPsets		            Aggregate	~
+-- RESPpushes		        Aggregate	>
+
+
+
+
+splitAfter :: String -> String -> (String, String)
+splitAfter _ "" = ([],[])
+splitAfter "" _ = (_,"")
+splitAfter delimiter text =
+    let (chunk, remaining) = splitAt (length delimiter) text
+    in if chunk == delimiter
+        then (delimiter, remaining)
+        else case text of
+            []      -> ([],[])
+            (x:xs)  -> let (first, second) = splitAfter delimiter xs
+                       in (x:first, second)
+
+splitAfterCRLF = splitAfter '\r\n'
+
+data RArray = RArray
+    { len   :: Int
+    , txt   :: String
+    } deriving (Show)
+
+data RBulkString = BulkString
+    { len   :: Int
+    , txt   :: String
+    } deriving (Show)
+
+breakCRLF :: String a => a -> [a]
+breakCRLF "" = []
+breakCRLF text = (first, second)
+    (first, second) = break (== '\r') text
+
+
+
+RESPbulkstring :: string a -> BulkString b
+
+
+
+
+stringBreak :: string -> string -> [string]
+stringBreak _ "" = []
+stringBreak (x:xs) text do
+    () break (== x) xs
+
+RESPbulkstring :: a -> a
+RESPbulkstring "0\r\n\r\n" = ""
+RESPbulkstring (x:xs) = do
+    length <- x
+    
+
+RESPparser :: a -> b
+RESPparser (x:xs)
+    |x=='$'     = RESPbulkstring (map toLower xs)
+    |x=='*'     = RESParrays (map toLower xs)
+RESPparser _ = []
+
 
 handleClient :: Socket -> IO ()
 handleClient socket = do
